@@ -58,8 +58,8 @@ flutter:
   uses-material-design: true
   assets:
     - assets/avatars/
-    - assets/badges/
-
+    - assets/avatars/badges/ 
+    #fix: corrected asset paths for avatars and badges in pubspec.yaml
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg
