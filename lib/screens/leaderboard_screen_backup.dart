@@ -4,7 +4,7 @@ import '../models/leaderboard_entry.dart';
 import '../services/leaderboard_service.dart';
 
 class LeaderboardScreen extends StatefulWidget {
-  const LeaderboardScreen({Key? key}) : super(key: key);
+  const LeaderboardScreen({super.key});
   @override
   State<LeaderboardScreen> createState() => _LeaderboardScreenState();
 }
@@ -15,22 +15,10 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   List<LeaderboardEntry> _entries = [];
   bool _loading = false;
 
-  // --- NEW: scroll controller + keys map ---
-  final ScrollController _scrollController = ScrollController();
-  final Map<String, GlobalKey> _itemKeys = <String, GlobalKey>{};
-
-  GlobalKey _keyFor(String id) => _itemKeys.putIfAbsent(id, () => GlobalKey());
-
   @override
   void initState() {
     super.initState();
     _loadEntries();
-  }
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
   }
 
   void _loadEntries() {
@@ -52,62 +40,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     if (_query.isEmpty) return _entries;
     final q = _query.toLowerCase();
     return _entries.where((e) => e.name.toLowerCase().contains(q)).toList();
-  }
-
-  // --- NEW: scroll-to-my-rank method ---
-  void _goToMyRank() {
-    final filtered = _filteredEntries;
-    // try find in filtered list first
-    int idxFiltered = filtered.indexWhere((e) => e.isCurrentUser);
-    LeaderboardEntry? target;
-    if (idxFiltered != -1) {
-      target = filtered[idxFiltered];
-    } else {
-      // try in full list
-      int idxAll = _entries.indexWhere((e) => e.isCurrentUser);
-      if (idxAll != -1) {
-        target = _entries[idxAll];
-      }
-    }
-
-    if (target == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Your rank not found.')));
-      return;
-    }
-
-    final key = _itemKeys[target.id];
-    if (key != null && key.currentContext != null) {
-      Scrollable.ensureVisible(
-        key.currentContext!,
-        duration: const Duration(milliseconds: 600),
-        curve: Curves.easeInOut,
-        alignment: 0.5,
-      );
-      // optional: briefly flash highlight (you already use a highlighted color)
-      return;
-    }
-
-    // If the key/context is not yet available (widget not built), try after frame:
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final k2 = _itemKeys[target!.id];
-      if (k2?.currentContext != null) {
-        Scrollable.ensureVisible(
-          k2!.currentContext!,
-          duration: const Duration(milliseconds: 600),
-          curve: Curves.easeInOut,
-          alignment: 0.5,
-        );
-        return;
-      }
-
-      // fallback: approximate offset (useful if widget not keyed)
-      final idx = _entries.indexWhere((e) => e.id == target!.id);
-      if (idx != -1) {
-        // if idx < 3 it belongs to top3; scroll to top
-        final offset = idx < 3 ? 0.0 : (idx - 3) * 92.0; // 92 approx row height
-        _scrollController.animateTo(offset, duration: const Duration(milliseconds: 600), curve: Curves.easeInOut);
-      }
-    });
   }
 
   @override
@@ -133,6 +65,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
           ),
         ),
       ),
+      // colorful gradient background
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -156,19 +89,13 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                     : rest.isEmpty
                         ? ListView(physics: const AlwaysScrollableScrollPhysics(), children: const [SizedBox(height: 60), Center(child: Text('No results'))])
                         : ListView.separated(
-                            controller: _scrollController, // attach controller
                             padding: const EdgeInsets.symmetric(vertical: 8),
                             itemCount: rest.length,
                             separatorBuilder: (_, __) => const SizedBox(height: 6),
                             itemBuilder: (context, index) {
                               final entry = rest[index];
                               final rank = index + 4;
-                              // assign key so we can find this widget
-                              return _LeaderboardRow(
-                                key: _keyFor(entry.id),
-                                entry: entry,
-                                rank: rank,
-                              );
+                              return _LeaderboardRow(entry: entry, rank: rank);
                             },
                           ),
               ),
@@ -179,9 +106,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 children: [
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: _goToMyRank, // <-- hooked here
+                      onPressed: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('My Stats (placeholder)'))),
                       icon: const Icon(Icons.person),
-                      label: const Text('My Rank'),
+                      label: const Text('My Stats'),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -248,23 +175,22 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          if (b != null) Expanded(child: _TopCard(key: _keyFor(b.id), entry: b, position: 2)),
+          if (b != null) Expanded(child: _TopCard(entry: b, position: 2)),
           const SizedBox(width: 8),
-          if (a != null) Expanded(child: _TopCard(key: _keyFor(a.id), entry: a, position: 1, isCenter: true)),
+          if (a != null) Expanded(child: _TopCard(entry: a, position: 1, isCenter: true)),
           const SizedBox(width: 8),
-          if (c != null) Expanded(child: _TopCard(key: _keyFor(c.id), entry: c, position: 3)),
+          if (c != null) Expanded(child: _TopCard(entry: c, position: 3)),
         ],
       ),
     );
   }
 }
 
-// --- Top card accepts Key now ---
 class _TopCard extends StatelessWidget {
   final LeaderboardEntry entry;
   final int position;
   final bool isCenter;
-  const _TopCard({Key? key, required this.entry, required this.position, this.isCenter = false}) : super(key: key);
+  const _TopCard({required this.entry, required this.position, this.isCenter = false});
 
   LinearGradient _medalGradient(int pos) {
     if (pos == 1) {
@@ -317,11 +243,10 @@ class _TopCard extends StatelessWidget {
   }
 }
 
-// --- Row accepts Key now ---
 class _LeaderboardRow extends StatelessWidget {
   final LeaderboardEntry entry;
   final int rank;
-  const _LeaderboardRow({Key? key, required this.entry, required this.rank}) : super(key: key);
+  const _LeaderboardRow({required this.entry, required this.rank});
 
   @override
   Widget build(BuildContext context) {
