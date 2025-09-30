@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import '../models/leaderboard_entry.dart';
 import '../services/leaderboard_service.dart';
+import 'activities_screen.dart';
 
 class LeaderboardScreen extends StatefulWidget {
   const LeaderboardScreen({Key? key}) : super(key: key);
@@ -71,7 +72,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     }
 
     if (target == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Your rank not found.')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Your rank not found.')));
       return;
     }
 
@@ -105,7 +108,11 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       if (idx != -1) {
         // if idx < 3 it belongs to top3; scroll to top
         final offset = idx < 3 ? 0.0 : (idx - 3) * 92.0; // 92 approx row height
-        _scrollController.animateTo(offset, duration: const Duration(milliseconds: 600), curve: Curves.easeInOut);
+        _scrollController.animateTo(
+          offset,
+          duration: const Duration(milliseconds: 600),
+          curve: Curves.easeInOut,
+        );
       }
     });
   }
@@ -118,11 +125,32 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Leaderboard', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Leaderboard',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         actions: [
+          // Rewards button in the AppBar
           IconButton(
-            icon: const Icon(Icons.emoji_events),
-            onPressed: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Rewards (placeholder)'))),
+            icon: const Icon(Icons.emoji_events), // 🏆 Trophy icon
+            onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Rewards (placeholder)')),
+            ),
+          ),
+
+          // Activities button in the AppBar
+          IconButton(
+            icon: const Icon(Icons.casino), // 🎲 Dice icon
+            tooltip: "Activities", // Tooltip text shown on long press
+            onPressed: () {
+              // Navigate to ActivitiesScreen when tapped
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ActivitiesScreen(),
+                ),
+              );
+            },
           ),
         ],
         bottom: PreferredSize(
@@ -146,7 +174,10 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             const SizedBox(height: 8),
             _buildFilterChips(),
             const SizedBox(height: 12),
-            SizedBox(height: 170, child: top3.isEmpty ? const SizedBox() : _buildTopThreeRow(top3)),
+            SizedBox(
+              height: 170,
+              child: top3.isEmpty ? const SizedBox() : _buildTopThreeRow(top3),
+            ),
             const SizedBox(height: 8),
             Expanded(
               child: RefreshIndicator(
@@ -154,23 +185,29 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 child: _loading
                     ? const Center(child: CircularProgressIndicator())
                     : rest.isEmpty
-                        ? ListView(physics: const AlwaysScrollableScrollPhysics(), children: const [SizedBox(height: 60), Center(child: Text('No results'))])
-                        : ListView.separated(
-                            controller: _scrollController, // attach controller
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                            itemCount: rest.length,
-                            separatorBuilder: (_, __) => const SizedBox(height: 6),
-                            itemBuilder: (context, index) {
-                              final entry = rest[index];
-                              final rank = index + 4;
-                              // assign key so we can find this widget
-                              return _LeaderboardRow(
-                                key: _keyFor(entry.id),
-                                entry: entry,
-                                rank: rank,
-                              );
-                            },
-                          ),
+                    ? ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        children: const [
+                          SizedBox(height: 60),
+                          Center(child: Text('No results')),
+                        ],
+                      )
+                    : ListView.separated(
+                        controller: _scrollController, // attach controller
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        itemCount: rest.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 6),
+                        itemBuilder: (context, index) {
+                          final entry = rest[index];
+                          final rank = index + 4;
+                          // assign key so we can find this widget
+                          return _LeaderboardRow(
+                            key: _keyFor(entry.id),
+                            entry: entry,
+                            rank: rank,
+                          );
+                        },
+                      ),
               ),
             ),
             Padding(
@@ -186,7 +223,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                   ),
                   const SizedBox(width: 12),
                   OutlinedButton(
-                    onPressed: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Redeem (placeholder)'))),
+                    onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Redeem (placeholder)')),
+                    ),
                     child: const Text('Redeem'),
                   ),
                 ],
@@ -205,7 +244,10 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         prefixIcon: const Icon(Icons.search),
         filled: true,
         fillColor: Colors.white,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
       ),
       onChanged: (v) => setState(() => _query = v.trim()),
@@ -223,7 +265,10 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
           return Padding(
             padding: const EdgeInsets.only(right: 8.0),
             child: ChoiceChip(
-              label: Text(op, style: TextStyle(color: selected ? Colors.white : Colors.black)),
+              label: Text(
+                op,
+                style: TextStyle(color: selected ? Colors.white : Colors.black),
+              ),
               selected: selected,
               selectedColor: Colors.deepOrangeAccent,
               backgroundColor: Colors.white70,
@@ -248,11 +293,25 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          if (b != null) Expanded(child: _TopCard(key: _keyFor(b.id), entry: b, position: 2)),
+          if (b != null)
+            Expanded(
+              child: _TopCard(key: _keyFor(b.id), entry: b, position: 2),
+            ),
           const SizedBox(width: 8),
-          if (a != null) Expanded(child: _TopCard(key: _keyFor(a.id), entry: a, position: 1, isCenter: true)),
+          if (a != null)
+            Expanded(
+              child: _TopCard(
+                key: _keyFor(a.id),
+                entry: a,
+                position: 1,
+                isCenter: true,
+              ),
+            ),
           const SizedBox(width: 8),
-          if (c != null) Expanded(child: _TopCard(key: _keyFor(c.id), entry: c, position: 3)),
+          if (c != null)
+            Expanded(
+              child: _TopCard(key: _keyFor(c.id), entry: c, position: 3),
+            ),
         ],
       ),
     );
@@ -264,19 +323,34 @@ class _TopCard extends StatelessWidget {
   final LeaderboardEntry entry;
   final int position;
   final bool isCenter;
-  const _TopCard({Key? key, required this.entry, required this.position, this.isCenter = false}) : super(key: key);
+  const _TopCard({
+    Key? key,
+    required this.entry,
+    required this.position,
+    this.isCenter = false,
+  }) : super(key: key);
 
   LinearGradient _medalGradient(int pos) {
     if (pos == 1) {
-      return const LinearGradient(colors: [Color(0xFFFFF59D), Color(0xFFFFD54F)]);
+      return const LinearGradient(
+        colors: [Color(0xFFFFF59D), Color(0xFFFFD54F)],
+      );
     } else if (pos == 2) {
-      return const LinearGradient(colors: [Color(0xFF81D4FA), Color(0xFF4FC3F7)]);
+      return const LinearGradient(
+        colors: [Color(0xFF81D4FA), Color(0xFF4FC3F7)],
+      );
     } else {
-      return const LinearGradient(colors: [Color(0xFFFFAB91), Color(0xFFFF8A65)]);
+      return const LinearGradient(
+        colors: [Color(0xFFFFAB91), Color(0xFFFF8A65)],
+      );
     }
   }
 
-  String _emoji(int pos) => pos == 1 ? '👑' : pos == 2 ? '⭐' : '🎉';
+  String _emoji(int pos) => pos == 1
+      ? '👑'
+      : pos == 2
+      ? '⭐'
+      : '🎉';
 
   @override
   Widget build(BuildContext context) {
@@ -286,11 +360,17 @@ class _TopCard extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
         padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(gradient: gradient, borderRadius: BorderRadius.circular(16)),
+        decoration: BoxDecoration(
+          gradient: gradient,
+          borderRadius: BorderRadius.circular(16),
+        ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(_emoji(position), style: TextStyle(fontSize: isCenter ? 32 : 26)),
+            Text(
+              _emoji(position),
+              style: TextStyle(fontSize: isCenter ? 32 : 26),
+            ),
             const SizedBox(height: 8),
             ClipOval(
               child: Image.asset(
@@ -302,14 +382,26 @@ class _TopCard extends StatelessWidget {
                   width: isCenter ? 70 : 56,
                   height: isCenter ? 70 : 56,
                   color: Colors.white70,
-                  child: Center(child: Text(entry.name.isNotEmpty ? entry.name[0] : '?')),
+                  child: Center(
+                    child: Text(entry.name.isNotEmpty ? entry.name[0] : '?'),
+                  ),
                 ),
               ),
             ),
             const SizedBox(height: 8),
-            Text(entry.name, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87, fontSize: isCenter ? 16 : 14)),
+            Text(
+              entry.name,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+                fontSize: isCenter ? 16 : 14,
+              ),
+            ),
             const SizedBox(height: 6),
-            Text('${entry.points} pts', style: const TextStyle(fontWeight: FontWeight.bold)),
+            Text(
+              '${entry.points} pts',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
           ],
         ),
       ),
@@ -321,7 +413,8 @@ class _TopCard extends StatelessWidget {
 class _LeaderboardRow extends StatelessWidget {
   final LeaderboardEntry entry;
   final int rank;
-  const _LeaderboardRow({Key? key, required this.entry, required this.rank}) : super(key: key);
+  const _LeaderboardRow({Key? key, required this.entry, required this.rank})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -329,8 +422,8 @@ class _LeaderboardRow extends StatelessWidget {
     final rowColor = highlight
         ? Colors.yellow[200]
         : rank % 2 == 0
-            ? Colors.lightGreen[100]
-            : Colors.pink[100];
+        ? Colors.lightGreen[100]
+        : Colors.pink[100];
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
@@ -338,11 +431,23 @@ class _LeaderboardRow extends StatelessWidget {
       decoration: BoxDecoration(
         color: rowColor,
         borderRadius: BorderRadius.circular(14),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 6, offset: const Offset(2, 4))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 6,
+            offset: const Offset(2, 4),
+          ),
+        ],
       ),
       child: Row(
         children: [
-          SizedBox(width: 56, child: Text('🏅 $rank', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16))),
+          SizedBox(
+            width: 56,
+            child: Text(
+              '🏅 $rank',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+          ),
           ClipOval(
             child: Image.asset(
               entry.avatar,
@@ -353,7 +458,9 @@ class _LeaderboardRow extends StatelessWidget {
                 width: 52,
                 height: 52,
                 color: Colors.white.withOpacity(0.6),
-                child: Center(child: Text(entry.name.isNotEmpty ? entry.name[0] : '?')),
+                child: Center(
+                  child: Text(entry.name.isNotEmpty ? entry.name[0] : '?'),
+                ),
               ),
             ),
           ),
@@ -362,23 +469,42 @@ class _LeaderboardRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(entry.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                Text(
+                  entry.name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
                 const SizedBox(height: 6),
                 Row(
                   children: [
                     if (entry.badges.isNotEmpty)
-                      ...entry.badges.map((b) => Padding(
-                            padding: const EdgeInsets.only(right: 6.0),
-                            child: Image.asset(b, width: 24, height: 24, errorBuilder: (_, __, ___) => const SizedBox()),
-                          )),
+                      ...entry.badges.map(
+                        (b) => Padding(
+                          padding: const EdgeInsets.only(right: 6.0),
+                          child: Image.asset(
+                            b,
+                            width: 24,
+                            height: 24,
+                            errorBuilder: (_, __, ___) => const SizedBox(),
+                          ),
+                        ),
+                      ),
                     const SizedBox(width: 6),
-                    Text('Lvl ${entry.level} • 🔥 ${entry.streak}', style: const TextStyle(fontSize: 12)),
+                    Text(
+                      'Lvl ${entry.level} • 🔥 ${entry.streak}',
+                      style: const TextStyle(fontSize: 12),
+                    ),
                   ],
                 ),
               ],
             ),
           ),
-          Text('${entry.points}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          Text(
+            '${entry.points}',
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          ),
           const SizedBox(width: 6),
           IconButton(
             icon: const Icon(Icons.compare_arrows),
@@ -387,7 +513,12 @@ class _LeaderboardRow extends StatelessWidget {
               builder: (_) => AlertDialog(
                 title: const Text('Compare'),
                 content: Text('Compare ${entry.name} with you (implement)'),
-                actions: [TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Close'))],
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Close'),
+                  ),
+                ],
               ),
             ),
           ),
